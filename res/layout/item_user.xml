@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    
+    <ImageView 
+        android:id="@+id/img_avatar"
+        android:src="@drawable/ic_launcher"
+        android:layout_width="80dp"
+   	 	android:layout_height="80dp"
+   	 	android:layout_marginRight="10dp"/>
+
+    <TextView
+        android:id="@+id/tvname"
+        android:layout_toRightOf="@+id/img_avatar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="name" />
+
+    <TextView
+        android:id="@+id/tvgender"
+        android:layout_toRightOf="@+id/img_avatar"
+        android:layout_below="@+id/tvname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:text="gender"/>
+
+    <TextView
+        android:id="@+id/tvphone"
+        android:layout_below="@+id/tvgender"
+        android:layout_toRightOf="@+id/img_avatar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="phone" />
+
+    <TextView
+        android:id="@+id/tvmail"
+        android:layout_below="@+id/tvphone"
+        android:layout_toRightOf="@+id/img_avatar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:text="mail"/>
+
+</RelativeLayout>
