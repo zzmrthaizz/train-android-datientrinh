@@ -33,10 +33,12 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.R.integer;
+import android.R.string;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Loader;
@@ -56,6 +58,7 @@ import android.widget.TextView;
 @SuppressLint("NewApi")
 public class MainActivity extends Activity implements LoaderCallbacks<Cursor> {
 
+	MyASyncTask getData;
 	// Cursorloader
 	MyCursorAdapter adapter;
 	CursorLoader cursorLoader;
@@ -66,15 +69,13 @@ public class MainActivity extends Activity implements LoaderCallbacks<Cursor> {
 	Button addButton;
 	TextView textView;
 	// Http
-	String uri = "http://api.randomuser.me/";
+	String[] url = { "http://api.randomuser.me/" };
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-				.permitAll().build();
-		StrictMode.setThreadPolicy(policy);
+
 
 		getControl();
 		fillData();
@@ -89,13 +90,50 @@ public class MainActivity extends Activity implements LoaderCallbacks<Cursor> {
 
 			@Override
 			public void onClick(View arg0) {
-				for (int i = 0; i < 99; i++) {
-
-					getDataFromNetWork();
-				}
+				doASyncTask();
+//				addToDatabase(result);
+//				getDataFromNetWork();
 			}
 		});
 		loaderManager.restartLoader(LOADER_ID, null, this);
+	}
+
+	protected void doASyncTask() {
+		getData = new MyASyncTask(MainActivity.this);
+		getData.execute(url);
+		
+	}
+
+	protected void addToDatabase(String result) {
+		try {
+			JSONObject jsonObject = new JSONObject(result);
+			JSONArray jsonArray = jsonObject.getJSONArray("results");
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject c = jsonArray.getJSONObject(i);
+				JSONObject user = c.getJSONObject("user");
+				String gender = user.getString("gender");
+				JSONObject name = user.getJSONObject("name");
+				String title = name.getString("title");
+				String first = name.getString("first");
+				String mail = user.getString("email");
+				String phone = user.getString("phone");
+				String picture = user.getString("picture");
+				User userobj = new User();
+				userobj.setGender(gender);
+				userobj.setMail(mail);
+				userobj.setName(title + "." + first);
+				userobj.setPhone(phone);
+				userobj.setPicture(picture);
+
+				// Add user to database
+				addUsertoDb(userobj);
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
 	}
 
 	@Override
@@ -134,7 +172,7 @@ public class MainActivity extends Activity implements LoaderCallbacks<Cursor> {
 		String result = null;
 		StringBuilder stringBuilder = new StringBuilder();
 		HttpClient client = new DefaultHttpClient();
-		HttpGet request = new HttpGet(uri);
+		HttpGet request = new HttpGet();
 		try {
 			HttpResponse response = client.execute(request);
 			InputStream inputStream = response.getEntity().getContent();

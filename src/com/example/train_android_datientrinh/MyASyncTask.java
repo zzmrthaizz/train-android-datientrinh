@@ -13,58 +13,63 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.example.MyContentProvider;
+import com.example.database.MySQLiteHelper;
 import com.example.database.user_table;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-public class MyASyncTask extends AsyncTask<String, Void, String> {
+public class MyASyncTask extends AsyncTask<String, Void, Void> {
 	Activity context;
-
 	String result;
 
 	public MyASyncTask(Activity context) {
-		context = context;
+		this.context = context;
 	}
 
 	protected void onPreExecute() {
-		super.onPreExecute();
-		Toast.makeText(context, "Loading", Toast.LENGTH_SHORT).show();
-	};
-
-	@Override
-	protected String doInBackground(String... params) {
-		DefaultHttpClient client = new DefaultHttpClient();
-		HttpGet request = new HttpGet();
-		try {
-			HttpResponse response = client.execute(request);
-			InputStream inputStream = response.getEntity().getContent();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					inputStream));
-			StringBuilder stringBuilder = new StringBuilder();
-			String line = "";
-			while ((line = reader.readLine()) != null) {
-				stringBuilder.append(line);
-
-			}
-			result = stringBuilder.toString();
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return result;
+		super.onPreExecute();	
+		
 	}
 
 	@Override
-	protected void onPostExecute(String result) {
-		super.onPostExecute(result);
-		// Read data and port to Obj
+	protected Void doInBackground(String... params) {
+		for (int i = 0; i < 99; i++) {
+			for (String url : params) {
+				DefaultHttpClient client = new DefaultHttpClient();
+				HttpGet request = new HttpGet(url);
+				try {
+					HttpResponse response = client.execute(request);
+					InputStream inputStream = response.getEntity().getContent();
+					BufferedReader reader = new BufferedReader(
+							new InputStreamReader(inputStream));
+					StringBuilder stringBuilder = new StringBuilder();
+					String line = "";
+					while ((line = reader.readLine()) != null) {
+						stringBuilder.append(line);
+
+					}
+					result = stringBuilder.toString();
+					addToDatabase();
+				} catch (ClientProtocolException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		return null;
+	}
+
+	private void addToDatabase() {
 		try {
 			JSONObject jsonObject = new JSONObject(result);
 			JSONArray jsonArray = jsonObject.getJSONArray("results");
@@ -86,17 +91,24 @@ public class MyASyncTask extends AsyncTask<String, Void, String> {
 				userobj.setPicture(picture);
 
 				// Add user to database
-				ContentValues contentValues = new ContentValues();
-				contentValues.put(user_table.NAME_COL, userobj.getName());
-				contentValues.put(user_table.GENDER_COL, userobj.getGender());
-				contentValues.put(user_table.EMAIL_COL, userobj.getMail());
-				contentValues.put(user_table.PHONE_COL, userobj.getPhone());
-				contentValues.put(user_table.PICTURE_COL, userobj.getPicture());
+				addUsertoDb(userobj);
 			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 	}
+
+	private void addUsertoDb(User userobj) {
+		ContentValues contentValues = new ContentValues();
+		contentValues.put(user_table.NAME_COL, userobj.getName());
+		contentValues.put(user_table.GENDER_COL, userobj.getGender());
+		contentValues.put(user_table.EMAIL_COL, userobj.getMail());
+		contentValues.put(user_table.PHONE_COL, userobj.getPhone());
+		contentValues.put(user_table.PICTURE_COL, userobj.getPicture());
+		context.getContentResolver().insert(MyContentProvider.USER_URI, contentValues);
+		
+	}
+
 }
